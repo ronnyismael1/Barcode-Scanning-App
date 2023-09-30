@@ -1,4 +1,4 @@
-# Barcode-Scanning-App
+# Barcode-Scanning-App using REACT and EXPO
 
 **PROBLEM:** There is a need for a more efficient tracking method in San Jose. Currently, if we get asked about the current whereabouts of a board in NXT San Jose, we need to conduct an intensive search for each board to determine where it is at. 
 1.	We are notified when an RMA arrives and when an RMA leaves the facility.
