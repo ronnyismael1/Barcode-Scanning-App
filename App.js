@@ -11,8 +11,8 @@ export default function App() {
   return(
     <NavigationContainer>
       <Stack.Navigator  initialRouteName="Home">
-        <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="QRCodeScanner" component={QRCodeScannerScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} options={{ title: '**Under Development**' }}/>
+        <Stack.Screen name="QRCodeScanner" component={QRCodeScannerScreen} options={{ title: null }}/>
       </Stack.Navigator>
     </NavigationContainer>
   );
