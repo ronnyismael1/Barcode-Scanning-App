@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { styles } from '../styles/commonStyles';
 import { buttons } from '../styles/buttonStyles';
@@ -24,8 +24,9 @@ export default function QRCodeScannerScreen({ navigation }) {
     // What happens when we scan the bar code
     const handleBarCodeScanned = ({ type, data }) => {
         setScanned(true);
-        setText(data)
-        console.log('Type: ' + type + '\nData: ' + data)
+        // setText(data)
+        setText(<Text style={{ fontWeight: 'bold' }}>{data}</Text>)
+        console.log('Type: ' + type + '\nData: ' + data) // Output data to console
     };
     
     // Check permissions and return the screens
@@ -45,6 +46,7 @@ export default function QRCodeScannerScreen({ navigation }) {
 
     // Return the View
     return (
+        // Return screen
         <View style={styles.container}>
             <View style={styles.barcodebox}>
                 <BarCodeScanner
@@ -52,8 +54,16 @@ export default function QRCodeScannerScreen({ navigation }) {
                     style={{ height: 200, width: 370 }} />
                 </View>
             <Text style={styles.maintext}>{text}</Text>
-            {scanned && <Button title={'Scan again?'} onPress={() => setScanned(false)} color='tomato' />}
+
+            {/* Defining button to scan again */}
+            {scanned && (
+                <TouchableOpacity
+                    style={buttons.roundButton}
+                    onPress={() => setScanned(false)}
+                >
+                    <Text style={{ color: 'white' }}>Scan again?</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
-
 }
