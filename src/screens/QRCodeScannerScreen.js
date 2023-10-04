@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, Modal, TextInput } from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 import { styles } from '../styles/commonStyles';
 import { buttons } from '../styles/buttonStyles';
+import { db } from '../../Firebase/firebase';
+import { Picker } from '@react-native-picker/picker';
 
 export default function QRCodeScannerScreen({ navigation }) {
     const [hasPermission, setHasPermission] = useState(null);
@@ -10,6 +12,8 @@ export default function QRCodeScannerScreen({ navigation }) {
     const [data, setData] = useState('');  // For saving the SN of the board (number value)
     const [showModal, setShowModal] = useState(false);
     const [location, setLocation] = useState('');
+    const [selectedCollection, setSelectedCollection] = useState('');
+    const [selectedLocation, setSelectedLocation] = useState('');
 
     // Function to ask for camera permission
     const askForCameraPermission = async () => {
@@ -37,11 +41,16 @@ export default function QRCodeScannerScreen({ navigation }) {
     }
 
     // Handle the submission of data and location
-    const handleSubmit = () => {
-        // Here you would integrate with Firebase
-        console.log("SN:", data);
-        console.log("Location:", location);
-
+    const handleSubmit = async () => {
+        try {
+            await db.collection('boards').add({
+                serialNumber: data,
+                location: location
+            });
+            console.log('Data added successfully');
+        } catch (error) {
+            console.error('Error adding document: ', error);
+        }
         // Reset the input and close the modal
         setLocation('');
         handleCloseModal();
@@ -82,21 +91,10 @@ export default function QRCodeScannerScreen({ navigation }) {
                             <Text style={{ fontWeight: 'bold' }}>SN:</Text> {data}
                         </Text>
 
-                        <TextInput
-                            style={[
-                                styles.textInputSquare, 
-                                { 
-                                    backgroundColor: 'gray', 
-                                    padding: 14, // Increase padding
-                                    borderRadius: 10, // Round the corners
-                                    color: 'white',
-                                }
-                            ]}
-                            placeholder="Enter location..."
-                            placeholderTextColor="white" // Change placeholder color
-                            value={location}
-                            onChangeText={setLocation}
-                        />
+
+                        {/* Insert picker here */}
+
+
                         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
                             <TouchableOpacity
                                 style={[buttons.roundButtonblk, { marginRight: 5 }]}
@@ -114,7 +112,6 @@ export default function QRCodeScannerScreen({ navigation }) {
                     </View>
                 </View>
             </Modal>
-
             {/* Return screen */}
             <View style={styles.barcodebox}>
                 <BarCodeScanner
