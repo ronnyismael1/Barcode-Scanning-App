@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Button, TouchableOpacity, Modal } from 'react-native';
 import { Camera } from 'expo-camera';
 
 import { styles } from '../styles/commonStyles';
@@ -18,6 +18,9 @@ export default function QRCodeScannerScreen({ navigation }) {
   const [showModal, setShowModal] = useState(false);
   const [location, setLocation] = useState('');
   const [zoom, setZoom] = useState(0);
+  const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
 
   // Function to ask for camera permission
   const askForCameraPermission = async () => {
@@ -32,35 +35,10 @@ export default function QRCodeScannerScreen({ navigation }) {
 
   // What happens when we scan the bar code
   const handleBarCodeScanned = ({ type, data }) => {
-    setScanned(true);
-    setData(data);  // save just the data (SN of the board)
-    setShowModal(true); // Show the modal when QR code is scanned
-    // Reset 'scanned' after a short delay to allow for continuous zooming
-    setTimeout(() => setScanned(false), 1000);
-  };
-
-  // Close the modal and reset state for another scan
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setScanned(false);
-    setLocation(''); // Reset location input after closing the modal
-  };
-
-  // Handle the submission of data and location
-  const handleSubmit = async () => {
-    try {
-      const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
-      await setDoc(subCollectionRef, {
-        location: 'TEST' // Change this to not be constant
-        // add more fields as we expand
-      });
-      console.log('Data added successfully');
-    } catch (error) {
-      console.error('Error adding document: ', error);
+    // Check if the serial number is already scanned
+    if (!scannedSerialNumbers.includes(data)) {
+        setScannedSerialNumbers(prevNumbers => [...prevNumbers, data]);
     }
-    // Reset the input and close the modal
-    setLocation('');
-    handleCloseModal();
   };
 
   // Handle pinch gestures to change zoom
@@ -94,6 +72,40 @@ export default function QRCodeScannerScreen({ navigation }) {
     );
   }
 
+  // Handle the submission of data and location
+  const handleSubmit = async () => {
+    try {
+      const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
+      await setDoc(subCollectionRef, {
+        location: 'TEST' // Change this to not be constant
+        // add more fields as we expand
+      });
+      console.log('Data added successfully');
+    } catch (error) {
+      console.error('Error adding document: ', error);
+    }
+    // Reset the input and close the modal
+    setLocation('');
+    handleCloseModal();
+  };
+
+  // For questionaire
+  const handleAnswer = (question, answer) => {
+    setAnswers(prevAnswers => ({ ...prevAnswers, [question]: answer }));
+    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+  };
+    const goBackward = () => {
+      setCurrentQuestionIndex(prevIndex => Math.max(0, prevIndex - 1));
+  };
+  const goForward = () => {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+  };
+  const handleDiscard = () => {
+      // Logic to discard the answers
+      setAnswers({});
+      setCurrentQuestionIndex(0);
+  };
+
   // Main return for scanning and displaying modal
   return (
     <View style={containers.parent}>
@@ -101,34 +113,6 @@ export default function QRCodeScannerScreen({ navigation }) {
       {/* Container for Camera */}
       <PinchGestureHandler onGestureEvent={(event) => changeZoom(event)}>
         <View style={containers.containerCamera}>
-          <Modal
-              animationType="slide"
-              transparent={true}
-              visible={showModal}
-              onRequestClose={handleCloseModal}
-            >
-            <View style={styles.centeredView}>
-              <View style={modals.default}>
-                <Text style={styles.maintext}>
-                  <Text style={{ fontWeight: 'bold' }}>SN:</Text> {data} 
-                </Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                  <TouchableOpacity
-                    style={[buttons.roundButtonblk, { marginRight: 5 }]}
-                    onPress={handleSubmit}
-                    >
-                    <Text style={{ color: 'white' }}>Submit</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={[buttons.roundButton, { marginLeft: 5 }]}
-                    onPress={handleCloseModal}
-                    >
-                    <Text style={{ color: 'white' }}>Scan again?</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </View>
-          </Modal>
           {/* Return screen with barcode scanner */}
           <View style={styles.barcodebox}>
             <Camera
@@ -142,14 +126,42 @@ export default function QRCodeScannerScreen({ navigation }) {
 
       {/* Container for Objects */}
       <View style={containers.containerObjects}>
-          <Text>This is a new container</Text>
+        <Text style={{...styles.bolded, paddingLeft: 30, paddingBottom: 10}}>Scanned Serial Numbers...</Text>
+        {scannedSerialNumbers.map((serialNumber, index) => (
+          <View key={index} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5 }}>
+            <View style={styles.greenDot} />
+            <Text style={styles.main}>{serialNumber}</Text>
+          </View>
+        ))}
       </View>
 
-      {/* Container for Promp */}
+      {/* Container for Prompt */}
       <View style={containers.containerPrompt}>
-          <Text>This is a new container</Text>
+        {/* Question: Location */}
+        {currentQuestionIndex === 0 && (
+          <View>
+            <Text>Location:</Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+              <Button title="Location 1" onPress={() => handleAnswer('location', 'Location 1')} />
+              <Button title="Location 2" onPress={() => handleAnswer('location', 'Location 2')} />
+              <Button title="Location 3" onPress={() => handleAnswer('location', 'Location 3')} />
+            </View>
+          </View>
+        )}
+        {/* More questions can be added similarly based on the `currentQuestionIndex` */}
+        {/* After all questions */}
+        {currentQuestionIndex === 1 && ( // Assuming there's only 1 question for now
+          <View>
+            <Button title="Submit?" onPress={handleSubmit} />
+            <Button title="Discard" onPress={handleDiscard} />
+          </View>
+        )}
+        {/* Navigation buttons */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
+          <Button title="Go Backward" onPress={goBackward} />
+          <Button title="Go Forward" onPress={goForward} />
+        </View>
       </View>
-      
     </View>
   );
 }

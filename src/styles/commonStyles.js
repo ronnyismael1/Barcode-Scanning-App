@@ -5,6 +5,19 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     margin: 20,
   },
+  greenDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'green',
+    marginLeft: 30,
+    marginRight: 10,
+  },
+  bolded: {
+    fontSize: 16,
+    fontWeight: '',
+    textAlign: 'left',
+  },
   barcodebox: {
     height: 200,
     width: 380,
@@ -12,5 +25,11 @@ export const styles = StyleSheet.create({
     borderRadius: 10,
     backgroundColor: 'tomato',
     paddingTop: 0,
+  },
+  borderedContainer: {
+    borderWidth: 0.2,
+    borderColor: 'gray',
+    borderRadius: 3,
+    padding: 0,
   },
 });
