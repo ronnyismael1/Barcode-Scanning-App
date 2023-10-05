@@ -4,6 +4,7 @@ import { Camera } from 'expo-camera';
 import { styles } from '../styles/commonStyles';
 import { buttons } from '../styles/buttonStyles';
 import { db } from '../../Firebase/firebase';
+import { doc, setDoc, addDoc } from  'firebase/firestore';
 import { PinchGestureHandler } from 'react-native-gesture-handler';
 
 export default function QRCodeScannerScreen({ navigation }) {
@@ -44,9 +45,10 @@ export default function QRCodeScannerScreen({ navigation }) {
   // Handle the submission of data and location
   const handleSubmit = async () => {
     try {
-      await db.collection('boards').add({
-        serialNumber: data,
-        location: location
+      const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
+      await setDoc(subCollectionRef, {
+        location: 'FSI' // Change this to not be constant
+        // add more fields as we expand
       });
       console.log('Data added successfully');
     } catch (error) {
