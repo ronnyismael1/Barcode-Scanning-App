@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, Modal } from 'react-native';
 import { Camera } from 'expo-camera';
+
 import { styles } from '../styles/commonStyles';
-import { buttons } from '../styles/buttonStyles';
+import { buttons } from '../styles/buttons';
+import { modals } from '../styles/modals';
+import { containers } from '../styles/containers';
+
 import { db } from '../../Firebase/firebase';
 import { doc, setDoc, addDoc } from  'firebase/firestore';
 import { PinchGestureHandler } from 'react-native-gesture-handler';
@@ -47,7 +51,7 @@ export default function QRCodeScannerScreen({ navigation }) {
     try {
       const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
       await setDoc(subCollectionRef, {
-        location: 'FSI' // Change this to not be constant
+        location: 'TEST' // Change this to not be constant
         // add more fields as we expand
       });
       console.log('Data added successfully');
@@ -63,7 +67,7 @@ export default function QRCodeScannerScreen({ navigation }) {
   const changeZoom = (event) => {
     let newZoom;
     if (event.nativeEvent.scale > 1) {
-      newZoom = zoom + 0.005;
+      newZoom = zoom + 0.001;
     } else {
       newZoom = zoom - 0.005;
     }
@@ -74,14 +78,14 @@ export default function QRCodeScannerScreen({ navigation }) {
   // Check permissions and return the screens
   if (hasPermission === null) {
     return (
-      <View style={styles.container}>
+      <View style={containers.container}>
         <Text>Requesting for camera permission</Text>
       </View>
     );
   }
   if (hasPermission === false) {
     return (
-      <View style={styles.container}>
+      <View style={containers.container}>
         <Text style={{ margin: 10 }}>No access to camera</Text>
         <TouchableOpacity style={buttons.roundButton} onPress={askForCameraPermission}>
           <Text style={{ color: 'white' }}>Allow Camera</Text>
@@ -92,48 +96,60 @@ export default function QRCodeScannerScreen({ navigation }) {
 
   // Main return for scanning and displaying modal
   return (
-    <PinchGestureHandler onGestureEvent={(event) => changeZoom(event)}>
-      <View style={styles.container}>
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showModal}
-            onRequestClose={handleCloseModal}
-          >
-          <View style={styles.centeredView}>
-            <View style={styles.modalView}>
-              <Text style={styles.maintext}>
-                <Text style={{ fontWeight: 'bold' }}>SN:</Text> {data} 
-              </Text>
+    <View style={containers.parent}>
 
-              {/* Insert picker here */}
-
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-                <TouchableOpacity
-                  style={[buttons.roundButtonblk, { marginRight: 5 }]}
-                  onPress={handleSubmit}
-                  >
-                  <Text style={{ color: 'white' }}>Submit</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[buttons.roundButton, { marginLeft: 5 }]}
-                  onPress={handleCloseModal}
-                  >
-                  <Text style={{ color: 'white' }}>Scan again?</Text>
-                </TouchableOpacity>
+      {/* Container for Camera */}
+      <PinchGestureHandler onGestureEvent={(event) => changeZoom(event)}>
+        <View style={containers.containerCamera}>
+          <Modal
+              animationType="slide"
+              transparent={true}
+              visible={showModal}
+              onRequestClose={handleCloseModal}
+            >
+            <View style={styles.centeredView}>
+              <View style={modals.default}>
+                <Text style={styles.maintext}>
+                  <Text style={{ fontWeight: 'bold' }}>SN:</Text> {data} 
+                </Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+                  <TouchableOpacity
+                    style={[buttons.roundButtonblk, { marginRight: 5 }]}
+                    onPress={handleSubmit}
+                    >
+                    <Text style={{ color: 'white' }}>Submit</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[buttons.roundButton, { marginLeft: 5 }]}
+                    onPress={handleCloseModal}
+                    >
+                    <Text style={{ color: 'white' }}>Scan again?</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
+          </Modal>
+          {/* Return screen with barcode scanner */}
+          <View style={styles.barcodebox}>
+            <Camera
+              onBarCodeScanned={handleBarCodeScanned}
+              style={{ height: 200, width: 380 }}
+              zoom={zoom}
+            />
           </View>
-        </Modal>
-        {/* Return screen with barcode scanner */}
-        <View style={styles.barcodebox}>
-          <Camera
-            onBarCodeScanned={handleBarCodeScanned}
-            style={{ height: 600, width: 370 }}
-            zoom={zoom}
-          />
         </View>
+      </PinchGestureHandler>
+
+      {/* Container for Objects */}
+      <View style={containers.containerObjects}>
+          <Text>This is a new container</Text>
       </View>
-    </PinchGestureHandler>
+
+      {/* Container for Promp */}
+      <View style={containers.containerPrompt}>
+          <Text>This is a new container</Text>
+      </View>
+      
+    </View>
   );
 }
