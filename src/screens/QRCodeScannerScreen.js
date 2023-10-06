@@ -14,6 +14,7 @@ export default function QRCodeScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [data, setData] = useState('');  // For saving the SN of the board (number value)
   const [location, setLocation] = useState('');
+  const [flavor, setflavor] = useState('');
   const [zoom, setZoom] = useState(0);
   const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -74,6 +75,9 @@ export default function QRCodeScannerScreen({ navigation }) {
     if (question === 'location') {
       setLocation(answer);
     }
+    if (question === 'flavor') {
+      setflavor(answer);
+    }
     setAnswers(prevAnswers => ({ ...prevAnswers, [question]: answer }));
     setCurrentQuestionIndex(prevIndex => prevIndex + 1);
   };
@@ -81,7 +85,7 @@ export default function QRCodeScannerScreen({ navigation }) {
       setCurrentQuestionIndex(prevIndex => Math.max(0, prevIndex - 1));
   };
   const goForward = () => {
-    const TOTAL_QUESTIONS = 2; // Restrict forward button from endlessly continuing
+    const TOTAL_QUESTIONS = 3; // Restrict forward button from endlessly continuing
     if (currentQuestionIndex < TOTAL_QUESTIONS - 1) {
       setCurrentQuestionIndex(prevIndex => prevIndex + 1);
     }  
@@ -90,12 +94,17 @@ export default function QRCodeScannerScreen({ navigation }) {
       // Logic to discard the answers
       setAnswers({});
       setCurrentQuestionIndex(0);
+      setScannedSerialNumbers([]);
   };
   const handleSubmit = async () => {
+    if (!flavor) {
+      console.error('Flavor not selected');
+      return;
+    }
     try {
       // Iterate over each scanner serial number
       for (let sn of scannedSerialNumbers) {
-        const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers', sn);   // Path to sub-collection named by the serial number
+        const subCollectionRef = doc(db, flavor, 'rma-here', 'serial-numbers', sn);   // Path to sub-collection named by the serial number
         await setDoc(subCollectionRef, {
           location: location
           // add more fields as we expand
@@ -107,6 +116,7 @@ export default function QRCodeScannerScreen({ navigation }) {
     }
     // Reset the input and close the modal
     setLocation('');
+    setScannedSerialNumbers([]);
   };
 
   // Main return for scanning and displaying modal
@@ -145,6 +155,16 @@ export default function QRCodeScannerScreen({ navigation }) {
             {/* Question: Location */}
             {currentQuestionIndex === 0 && (
               <View>
+                <Text style={{...styles.bolded, paddingBottom: 20}}>What kind of board?</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Button title="A0-SA7" onPress={() => handleAnswer('flavor', 'A0-SA7-Boards')} />
+                  <Button title="A1-SA7" onPress={() => handleAnswer('flavor', 'A1-SA7-Boards')} />
+                  <Button title="UPBY" onPress={() => handleAnswer('flavor', 'UPBY-Boards')} />
+                </View>
+              </View>
+            )}
+            {currentQuestionIndex === 1 && (
+              <View>
                 <Text style={{...styles.bolded, paddingBottom: 20}}>Where is the board?</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                   <Button title="FSI" onPress={() => handleAnswer('location', 'FSI')} />
@@ -153,13 +173,15 @@ export default function QRCodeScannerScreen({ navigation }) {
                 </View>
               </View>
             )}
-
-            {/* More questions can be added similarly based on the `currentQuestionIndex` */}
-
             {/* After all questions */}
-            {currentQuestionIndex === 1 && ( // Assuming there's only 1 question for now
+            {currentQuestionIndex === 2 && ( // Assuming there's only 1 question for now
               <View>
-                <Button title="Submit?" onPress={handleSubmit} disabled={scannedSerialNumbers.length === 0 || !location} />
+                <Button title="Submit?" onPress={handleSubmit} 
+                  disabled={
+                    scannedSerialNumbers.length === 0 || 
+                    !location || 
+                    !flavor
+                  }/>
                 <Button title="Discard" onPress={handleDiscard} />
               </View>
             )}
