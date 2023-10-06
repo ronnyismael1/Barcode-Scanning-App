@@ -1,21 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Button, TouchableOpacity, Modal } from 'react-native';
+import { View, Text, Button, TouchableOpacity, SafeAreaView, Image } from 'react-native';
+import { PinchGestureHandler } from 'react-native-gesture-handler';
 import { Camera } from 'expo-camera';
 
 import { styles } from '../styles/commonStyles';
 import { buttons } from '../styles/buttons';
-import { modals } from '../styles/modals';
 import { containers } from '../styles/containers';
 
 import { db } from '../../Firebase/firebase';
 import { doc, setDoc, addDoc } from  'firebase/firestore';
-import { PinchGestureHandler } from 'react-native-gesture-handler';
 
 export default function QRCodeScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
   const [scanned, setScanned] = useState(false);
   const [data, setData] = useState('');  // For saving the SN of the board (number value)
-  const [showModal, setShowModal] = useState(false);
   const [location, setLocation] = useState('');
   const [zoom, setZoom] = useState(0);
   const [scannedSerialNumbers, setScannedSerialNumbers] = useState([]);
@@ -72,7 +70,25 @@ export default function QRCodeScannerScreen({ navigation }) {
     );
   }
 
-  // Handle the submission of data and location
+  // For questionaire
+  const handleAnswer = (question, answer) => {
+    setAnswers(prevAnswers => ({ ...prevAnswers, [question]: answer }));
+    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+  };
+    const goBackward = () => {
+      setCurrentQuestionIndex(prevIndex => Math.max(0, prevIndex - 1));
+  };
+  const goForward = () => {
+    const TOTAL_QUESTIONS = 2; // Restrict forward button from endlessly continuing
+    if (currentQuestionIndex < TOTAL_QUESTIONS - 1) {
+      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
+    }  
+  };
+  const handleDiscard = () => {
+      // Logic to discard the answers
+      setAnswers({});
+      setCurrentQuestionIndex(0);
+  };
   const handleSubmit = async () => {
     try {
       const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
@@ -89,23 +105,6 @@ export default function QRCodeScannerScreen({ navigation }) {
     handleCloseModal();
   };
 
-  // For questionaire
-  const handleAnswer = (question, answer) => {
-    setAnswers(prevAnswers => ({ ...prevAnswers, [question]: answer }));
-    setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-  };
-    const goBackward = () => {
-      setCurrentQuestionIndex(prevIndex => Math.max(0, prevIndex - 1));
-  };
-  const goForward = () => {
-      setCurrentQuestionIndex(prevIndex => prevIndex + 1);
-  };
-  const handleDiscard = () => {
-      // Logic to discard the answers
-      setAnswers({});
-      setCurrentQuestionIndex(0);
-  };
-
   // Main return for scanning and displaying modal
   return (
     <View style={containers.parent}>
@@ -117,7 +116,7 @@ export default function QRCodeScannerScreen({ navigation }) {
           <View style={styles.barcodebox}>
             <Camera
               onBarCodeScanned={handleBarCodeScanned}
-              style={{ height: 200, width: 380 }}
+              style={{ height: 250, width: 380 }}
               zoom={zoom}
             />
           </View>
@@ -137,30 +136,46 @@ export default function QRCodeScannerScreen({ navigation }) {
 
       {/* Container for Prompt */}
       <View style={containers.containerPrompt}>
-        {/* Question: Location */}
-        {currentQuestionIndex === 0 && (
-          <View>
-            <Text>Location:</Text>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-              <Button title="Location 1" onPress={() => handleAnswer('location', 'Location 1')} />
-              <Button title="Location 2" onPress={() => handleAnswer('location', 'Location 2')} />
-              <Button title="Location 3" onPress={() => handleAnswer('location', 'Location 3')} />
-            </View>
+        <SafeAreaView style={{ flex: 1 }}>
+          <View style={{ flex: 1 }}>
+            {/* Question: Location */}
+            {currentQuestionIndex === 0 && (
+              <View>
+                <Text style={{...styles.bolded, paddingBottom: 20}}>Where is the board?</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  <Button title="FSI" onPress={() => handleAnswer('location', 'Location 1')} />
+                  <Button title="BT" onPress={() => handleAnswer('location', 'Location 2')} />
+                  <Button title="Prod." onPress={() => handleAnswer('location', 'Location 3')} />
+                </View>
+              </View>
+            )}
+
+            {/* More questions can be added similarly based on the `currentQuestionIndex` */}
+
+            {/* After all questions */}
+            {currentQuestionIndex === 1 && ( // Assuming there's only 1 question for now
+              <View>
+                <Button title="Submit?" onPress={handleSubmit} />
+                <Button title="Discard" onPress={handleDiscard} />
+              </View>
+            )}
           </View>
-        )}
-        {/* More questions can be added similarly based on the `currentQuestionIndex` */}
-        {/* After all questions */}
-        {currentQuestionIndex === 1 && ( // Assuming there's only 1 question for now
-          <View>
-            <Button title="Submit?" onPress={handleSubmit} />
-            <Button title="Discard" onPress={handleDiscard} />
+        </SafeAreaView>
+      </View>
+      
+      {/* Container for navigation */}
+      <View style={containers.containerfb}>
+        <SafeAreaView style={{ flex: 1 }}>
+          {/* Navigation buttons */}
+          <View style={{ flex: 1 }}>
+            <TouchableOpacity style={buttons.barrow} onPress={goBackward}>
+              <Image source={require('../img/forwardArrow.png')} style={{ width: 45, height: 45, transform: [{ scaleX: -1 }] }} />
+            </TouchableOpacity>
+            <TouchableOpacity style={buttons.farrow} onPress={goForward}>
+              <Image source={require('../img/forwardArrow.png')} style={{ width: 45, height: 45 }} />
+            </TouchableOpacity>
           </View>
-        )}
-        {/* Navigation buttons */}
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 20 }}>
-          <Button title="Go Backward" onPress={goBackward} />
-          <Button title="Go Forward" onPress={goForward} />
-        </View>
+        </SafeAreaView>             
       </View>
     </View>
   );

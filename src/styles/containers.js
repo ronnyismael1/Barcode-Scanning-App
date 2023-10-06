@@ -19,16 +19,25 @@ export const containers = StyleSheet.create({
     paddingTop: 20,
   },
   containerObjects: {
-    flex: 1.3,
+    flex: 1,
     backgroundColor: 'white',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
   },
   containerPrompt: {
-    flex: 1.3,
+    flex: 1,
     backgroundColor: 'white',
     alignItems: 'flex-start',
     justifyContent: 'flex-start',
     paddingLeft: 40,
+  },
+  containerfb: {
+    position: 'absolute',
+    bottom: 10,
+    left: 30,
+    right: 30,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
   },
 });

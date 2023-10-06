@@ -19,7 +19,7 @@ export const styles = StyleSheet.create({
     textAlign: 'left',
   },
   barcodebox: {
-    height: 200,
+    height: 250,
     width: 380,
     overflow: 'hidden',
     borderRadius: 10,
