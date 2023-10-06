@@ -12,7 +12,6 @@ import { doc, setDoc, addDoc } from  'firebase/firestore';
 
 export default function QRCodeScannerScreen({ navigation }) {
   const [hasPermission, setHasPermission] = useState(null);
-  const [scanned, setScanned] = useState(false);
   const [data, setData] = useState('');  // For saving the SN of the board (number value)
   const [location, setLocation] = useState('');
   const [zoom, setZoom] = useState(0);
@@ -72,6 +71,9 @@ export default function QRCodeScannerScreen({ navigation }) {
 
   // For questionaire
   const handleAnswer = (question, answer) => {
+    if (question === 'location') {
+      setLocation(answer);
+    }
     setAnswers(prevAnswers => ({ ...prevAnswers, [question]: answer }));
     setCurrentQuestionIndex(prevIndex => prevIndex + 1);
   };
@@ -91,18 +93,20 @@ export default function QRCodeScannerScreen({ navigation }) {
   };
   const handleSubmit = async () => {
     try {
-      const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers',data);   // Path to sub-collection named by the serial number
-      await setDoc(subCollectionRef, {
-        location: 'TEST' // Change this to not be constant
-        // add more fields as we expand
-      });
+      // Iterate over each scanner serial number
+      for (let sn of scannedSerialNumbers) {
+        const subCollectionRef = doc(db, 'A0-SA7-Boards', 'rma-here', 'serial-numbers', sn);   // Path to sub-collection named by the serial number
+        await setDoc(subCollectionRef, {
+          location: location
+          // add more fields as we expand
+        });
+      }
       console.log('Data added successfully');
     } catch (error) {
       console.error('Error adding document: ', error);
     }
     // Reset the input and close the modal
     setLocation('');
-    handleCloseModal();
   };
 
   // Main return for scanning and displaying modal
@@ -143,9 +147,9 @@ export default function QRCodeScannerScreen({ navigation }) {
               <View>
                 <Text style={{...styles.bolded, paddingBottom: 20}}>Where is the board?</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  <Button title="FSI" onPress={() => handleAnswer('location', 'Location 1')} />
-                  <Button title="BT" onPress={() => handleAnswer('location', 'Location 2')} />
-                  <Button title="Prod." onPress={() => handleAnswer('location', 'Location 3')} />
+                  <Button title="FSI" onPress={() => handleAnswer('location', 'FSI')} />
+                  <Button title="BT" onPress={() => handleAnswer('location', 'BT')} />
+                  <Button title="Prod." onPress={() => handleAnswer('location', 'Prod.')} />
                 </View>
               </View>
             )}
@@ -155,7 +159,7 @@ export default function QRCodeScannerScreen({ navigation }) {
             {/* After all questions */}
             {currentQuestionIndex === 1 && ( // Assuming there's only 1 question for now
               <View>
-                <Button title="Submit?" onPress={handleSubmit} />
+                <Button title="Submit?" onPress={handleSubmit} disabled={scannedSerialNumbers.length === 0 || !location} />
                 <Button title="Discard" onPress={handleDiscard} />
               </View>
             )}
