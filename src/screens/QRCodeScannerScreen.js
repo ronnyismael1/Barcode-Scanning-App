@@ -1,12 +1,13 @@
+// React
 import React, { useState, useEffect } from 'react';
 import { View, Text, Button, TouchableOpacity, SafeAreaView, Image } from 'react-native';
 import { PinchGestureHandler } from 'react-native-gesture-handler';
 import { Camera } from 'expo-camera';
-
+// Styles
 import { styles } from '../styles/commonStyles';
 import { buttons } from '../styles/buttons';
 import { containers } from '../styles/containers';
-
+// Database
 import { db } from '../../Firebase/firebase';
 import { doc, setDoc, addDoc } from  'firebase/firestore';
 
@@ -152,7 +153,6 @@ export default function QRCodeScannerScreen({ navigation }) {
       <View style={containers.containerPrompt}>
         <SafeAreaView style={{ flex: 1 }}>
           <View style={{ flex: 1 }}>
-            {/* Question: Location */}
             {currentQuestionIndex === 0 && (
               <View>
                 <Text style={{...styles.bolded, paddingBottom: 20}}>What kind of board?</Text>
@@ -174,7 +174,7 @@ export default function QRCodeScannerScreen({ navigation }) {
               </View>
             )}
             {/* After all questions */}
-            {currentQuestionIndex === 2 && ( // Assuming there's only 1 question for now
+            {currentQuestionIndex === 2 && (
               <View>
                 <Button title="Submit?" onPress={handleSubmit} 
                   disabled={

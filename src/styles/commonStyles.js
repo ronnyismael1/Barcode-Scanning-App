@@ -17,6 +17,8 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '',
     textAlign: 'left',
+    fontWeight: '',
+    fontFamily: '',
   },
   barcodebox: {
     height: 250,
