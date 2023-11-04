@@ -1,1 +1,1 @@
-Making this public. Deleting README info since it has sensitive work information.
+Making repository public, therefore deleting old README
